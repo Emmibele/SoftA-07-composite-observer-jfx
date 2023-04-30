@@ -8,6 +8,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -16,7 +20,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OpenMensaAPITests {
 
 	private static final Logger logger = LogManager.getLogger(OpenMensaAPITests.class);
@@ -44,12 +48,14 @@ class OpenMensaAPITests {
 
 	@Test
 	void testGetMeals() throws IOException {
-		// TODO prepare call
+		// prepare call
+		Call<List<Meal>> mealCall = openMensaAPI.getMeals("2023-05-02");
 
-		// TODO execute the call synchronously
+		// execute the call synchronously
+		Response<List<Meal>> mealResponse = mealCall.execute();
 
-		// TODO unwrap the body
-		List<Meal> meals = null;
+		// unwrap the body
+		List<Meal> meals = mealResponse.body();
 
 		assertNotNull(meals);
 		assertNotEquals(0, meals.size());
