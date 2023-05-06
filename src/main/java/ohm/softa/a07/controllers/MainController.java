@@ -1,5 +1,6 @@
 package ohm.softa.a07.controllers;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -17,16 +18,17 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
+import ohm.softa.a07.model.Meal;
 public class MainController implements Initializable {
 
 	private OpenMensaAPI openMensaAPI;
-
-
+	private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
 	// use annotation to tie to component in XML
 	@FXML
@@ -39,52 +41,50 @@ public class MainController implements Initializable {
 	private CheckBox chkVegetarian;
 
 	@FXML
-	private ListView<String> mealsList;
+	private ListView<Meal> mealsList;
 
+	private ObservableList<Meal> observableMeals;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-
-
 		Retrofit retrofit = new Retrofit.Builder()
 			.addConverterFactory(GsonConverterFactory.create())
 			.baseUrl("https://openmensa.org/api/v2/")
 			.build();
-
 		openMensaAPI = retrofit.create(OpenMensaAPI.class);
 
-
-
-
+		observableMeals = mealsList.getItems();
 
 		// set the event handler (callback)
 		btnRefresh.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				Call<List<Meal>> mealCall = openMensaAPI.getMeals("2023-05-02");
+				Call<List<Meal>> mealCall = openMensaAPI.getMeals(dateFormat.format(new Date()));
 				mealCall.enqueue(new Callback<List<Meal>>() {
 					@Override
 					public void onResponse(Call<List<Meal>> call, Response<List<Meal>> response) {
-						List<Meal> meals = response.body();
-						ObservableList<String> stringsMeals = FXCollections.observableArrayList();
-						for(Meal m : meals){
-							stringsMeals.add(m.toString());
+						if (response.isSuccessful() && response.body() != null) {
+							Platform.runLater(() -> {
+								observableMeals.clear();
+								observableMeals.addAll(response.body());
+							});
 						}
-						mealsList.setItems((ObservableList<String>) stringsMeals);
 					}
 
 					@Override
 					public void onFailure(Call<List<Meal>> call, Throwable t) {
-						ObservableList<String> list = FXCollections.observableArrayList("Enqueue failure");
-						mealsList.setItems(list);
+						observableMeals.clear();
 					}
 				});
-
-
-
-				//ObservableList<String> list = FXCollections.observableArrayList("Hans", "Dampf");
-				//mealsList.setItems(list);
 			}
 		});
+
+		btnClose.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				Platform.exit();
+			}
+		});
+
 	}
 }

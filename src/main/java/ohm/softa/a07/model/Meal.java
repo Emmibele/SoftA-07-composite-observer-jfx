@@ -11,10 +11,10 @@ import java.util.List;
  */
 
 public class Meal {
-	private int id;
-	private String name;
-	private String category;
-	private List<String> notes;
+	public int id;
+	public String name;
+	public String category;
+	public List<String> notes;
 
 	public Meal() {
 		notes = new LinkedList<>();
